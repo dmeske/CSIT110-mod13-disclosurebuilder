@@ -1,0 +1,231 @@
+<title>Disclosure Builder</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@400;600;700&display=swap">
+<style>
+/* Layout: a library catalog card — scenario slip on top, slot drawers below, a live typed preview of the assembled citation */
+:root {
+  --bg: #f1f4f3; --card: #ffffff; --ink: #172a2a; --muted: #4a5a5a; --line: #7f9190; --rule: #c9d6d4;
+  --accent: #0b6b6a; --accent-ink: #ffffff; --stamp: #9c2a1c; --good: #1d6b3a; --bad: #a3221b; --goodbg: #e4f2e8; --badbg: #fbe7e5; --slip: #e6efed;
+  --mono: "IBM Plex Mono", "Courier New", monospace; --sans: "IBM Plex Sans", "Segoe UI", Arial, sans-serif;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0f1716; --card: #172221; --ink: #e5efed; --muted: #b0c2bf; --line: #6d8481; --rule: #2a3a38;
+  --accent: #5fcfc9; --accent-ink: #0b1312; --stamp: #ff9a8a; --good: #7fd49b; --bad: #ff9a91; --goodbg: #15301f; --badbg: #3a1a18; --slip: #1e2d2b; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #0f1716; --card: #172221; --ink: #e5efed; --muted: #b0c2bf; --line: #6d8481; --rule: #2a3a38;
+  --accent: #5fcfc9; --accent-ink: #0b1312; --stamp: #ff9a8a; --good: #7fd49b; --bad: #ff9a91; --goodbg: #15301f; --badbg: #3a1a18; --slip: #1e2d2b; color-scheme: dark }
+* { box-sizing: border-box; }
+.wrap > *, .grid > * { min-width: 0; }
+body { background: var(--bg); color: var(--ink); font-family: var(--sans); font-size: 1.05rem; line-height: 1.55;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 20px 40px; }
+.wrap { max-width: 800px; margin: 0 auto; display: grid; gap: 18px; }
+h1 { font-size: clamp(1.7rem, 4vw, 2.3rem); margin: 0; letter-spacing: -.01em; }
+.eyebrow { font-family: var(--mono); text-transform: uppercase; letter-spacing: .1em; font-size: .78rem; color: var(--stamp); margin: 0 0 4px; font-weight: 600; }
+header p { margin: 6px 0 0; color: var(--muted); max-width: 64ch; }
+.card { background: var(--card); border: 1px solid var(--line); border-radius: 4px; padding: 20px; position: relative;
+  background-image: repeating-linear-gradient(transparent 0 31px, var(--rule) 31px 32px); }
+.hole { width: 18px; height: 18px; border-radius: 50%; border: 1px solid var(--line); background: var(--bg); margin: 0 auto 10px; }
+.meta { display: flex; flex-wrap: wrap; gap: 8px 16px; font-family: var(--mono); font-size: .85rem; color: var(--muted); }
+h2 { font-size: 1.3rem; margin: 6px 0 10px; text-wrap: balance; }
+h2:focus, h3:focus { outline: 3px solid var(--accent); outline-offset: 4px; }
+.slip { background: var(--slip); border: 1px dashed var(--line); padding: 12px 14px; border-radius: 4px; }
+.slip ul { margin: 6px 0 0; padding-left: 20px; }
+.slots { display: grid; gap: 12px; margin-top: 16px; }
+.slot { display: grid; grid-template-columns: minmax(0, 11rem) minmax(0, 1fr); gap: 10px; align-items: center; }
+.slot label { font-family: var(--mono); font-size: .9rem; font-weight: 600; }
+select { font: inherit; min-height: 48px; width: 100%; padding: 8px 10px; border: 1px solid var(--line); border-radius: 4px; background: var(--card); color: var(--ink); }
+select:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+.mark { font-weight: 700; margin-left: 6px; }
+.mark.ok { color: var(--good); } .mark.no { color: var(--bad); }
+@media (max-width: 520px) { .slot { grid-template-columns: 1fr; gap: 4px; } }
+.preview { margin-top: 16px; font-family: var(--mono); font-size: .95rem; background: var(--card); border: 1px solid var(--line); border-radius: 4px; padding: 12px 14px; overflow-wrap: anywhere; }
+.preview .gap { color: var(--muted); }
+.btns { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 16px; }
+button { font: inherit; font-weight: 700; min-height: 48px; padding: 10px 20px; border-radius: 4px; border: 2px solid var(--accent); background: var(--accent); color: var(--accent-ink); cursor: pointer; }
+button:disabled { background: transparent; color: var(--muted); border-color: var(--line); cursor: not-allowed; }
+button:focus-visible { outline: 3px solid var(--ink); outline-offset: 3px; }
+.feedback { margin-top: 16px; padding: 14px 16px; border: 1px solid var(--line); border-radius: 4px; }
+.feedback.good { background: var(--goodbg); } .feedback.bad { background: var(--badbg); }
+.feedback h3 { margin: 0 0 6px; font-size: 1.15rem; }
+.feedback ul { margin: 6px 0 0; padding-left: 20px; }
+.tablewrap { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-variant-numeric: tabular-nums; }
+caption { text-align: left; font-weight: 700; padding: 4px 0 8px; }
+th, td { border: 1px solid var(--line); padding: 8px 10px; text-align: left; }
+thead th { background: var(--slip); }
+.big { font-family: var(--mono); font-size: 2rem; margin: 4px 0; }
+.small { color: var(--muted); font-size: .92rem; }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+</style>
+
+<div class="wrap">
+  <header>
+    <p class="eyebrow">CSIT 110 · Module 13 game</p>
+    <h1>Disclosure Builder</h1>
+    <p>Each card describes how a fictional student used AI. Fill every slot to build the right citation or AI use statement, then check it. APA cards follow APA’s September 2025 guidance for citing an AI tool; MLA cards follow the MLA Style Center.</p>
+  </header>
+  <main class="card" id="stage"></main>
+  <p class="small" id="best"></p>
+  <div class="sr" aria-live="polite" id="live"></div>
+  <p class="small">Students and dates are fictional; the tools and companies are real. Want a head start on real assignments? <a href="https://citeai.base44.app">CiteAI</a> builds AI citations for you to review.</p>
+</div>
+
+<script>
+(function () {
+  // Each round: kind, scenario, slots [{label, options[], correct index, why}], template(fn of chosen texts)
+  const BANK = [
+    { kind: "APA", tool: "ChatGPT", scen: "Ana used OpenAI’s ChatGPT in 2026 to explain a statistics concept, and paraphrased its explanation in her psychology paper.", facts: ["Tool: ChatGPT (OpenAI)", "Year used: 2026", "Address: https://chatgpt.com"],
+      slots: [
+        { l: "Author", o: ["OpenAI", "ChatGPT", "Ana", "Anonymous"], c: 0, w: "APA credits the company that made the tool as the author." },
+        { l: "Date", o: ["(2026)", "(2026, March 3)", "(n.d.)"], c: 0, w: "For the tool in general, APA uses the year only." },
+        { l: "Title", o: ["ChatGPT", "Explain standard deviation", "OpenAI chatbot"], c: 0, w: "The title is the tool (or model) name, in italics." },
+        { l: "Description", o: ["[Large language model]", "[Chat transcript]", "[Computer software]"], c: 0, w: "APA’s description for chat tools like ChatGPT is [Large language model]." },
+        { l: "Source", o: ["https://chatgpt.com", "Personal communication", "Retrieved from my history"], c: 0, w: "Give the tool’s URL so readers can find it." },
+      ], fmt: (v) => `${v[0]}. ${v[1]}. <i>${v[2]}</i> ${v[3]}. ${v[4]}` },
+    { kind: "APA", tool: "Claude", scen: "Marcus used Anthropic’s Claude in 2026 to translate his own survey questions into Spanish, and cited the tool in his methods section.", facts: ["Tool: Claude (Anthropic)", "Year used: 2026", "Address: https://claude.ai"],
+      slots: [
+        { l: "Author", o: ["Claude", "Anthropic", "Marcus"], c: 1, w: "The company, Anthropic, is the author. The tool is never the author." },
+        { l: "Date", o: ["(n.d.)", "(2026)", "(2026, survey date)"], c: 1, w: "Year only for a general tool reference." },
+        { l: "Title", o: ["Translate my survey", "Claude", "Anthropic AI"], c: 1, w: "Use the tool name as the title." },
+        { l: "Description", o: ["[Large language model]", "[Translation]", "[Website]"], c: 0, w: "Use [Large language model]." },
+        { l: "Source", o: ["https://claude.ai", "https://anthropic.com/careers", "No URL needed"], c: 0, w: "Link to where the tool is used." },
+      ], fmt: (v) => `${v[0]}. ${v[1]}. <i>${v[2]}</i> ${v[3]}. ${v[4]}` },
+    { kind: "APA", tool: "Gemini", scen: "Priya quoted two sentences from Google’s Gemini in 2026 in a paper about chatbots, and included her prompt in an appendix.", facts: ["Tool: Gemini (Google)", "Year used: 2026", "Address: https://gemini.google.com"],
+      slots: [
+        { l: "Author", o: ["Gemini", "Priya", "Google"], c: 2, w: "Google, the company, is the author." },
+        { l: "Date", o: ["(2026)", "(n.d.)", "(Prompt, 2026)"], c: 0, w: "Year only." },
+        { l: "Title", o: ["“What is a chatbot?”", "Gemini", "Google AI"], c: 1, w: "The tool name is the title; the prompt goes in your text or appendix, not the reference." },
+        { l: "Description", o: ["[Large language model]", "[Quotation]", "[Appendix A]"], c: 0, w: "Use [Large language model]." },
+        { l: "Source", o: ["https://gemini.google.com", "Appendix A", "Google search"], c: 0, w: "Give the tool’s URL." },
+      ], fmt: (v) => `${v[0]}. ${v[1]}. <i>${v[2]}</i> ${v[3]}. ${v[4]}` },
+    { kind: "MLA", tool: "ChatGPT", scen: "Leo asked ChatGPT (OpenAI) on 3 Nov. 2026 to “describe three causes of the Dust Bowl” and paraphrased the answer in his history essay.", facts: ["Prompt: describe three causes of the Dust Bowl", "Date: 3 Nov. 2026", "Tool: ChatGPT (OpenAI), chatgpt.com"],
+      slots: [
+        { l: "Title of source", o: ["“Describe three causes of the Dust Bowl” prompt.", "ChatGPT.", "Leo’s chat."], c: 0, w: "MLA puts a description of your prompt in the title slot. No author is listed." },
+        { l: "Container", o: ["<i>ChatGPT</i>,", "<i>OpenAI</i>,", "<i>The Dust Bowl</i>,"], c: 0, w: "The AI tool is the container, in italics." },
+        { l: "Publisher", o: ["OpenAI,", "ChatGPT,", "Leo,"], c: 0, w: "The company that makes the tool is the publisher." },
+        { l: "Date", o: ["3 Nov. 2026,", "2026,", "n.d.,"], c: 0, w: "MLA uses the date the content was generated." },
+        { l: "Location", o: ["chatgpt.com.", "my laptop.", "page 1."], c: 0, w: "Give the tool’s URL (or a shareable link to the chat)." },
+      ], fmt: (v) => `${v[0]} ${v[1]} ${v[2]} ${v[3]} ${v[4]}` },
+    { kind: "MLA", tool: "Gemini", scen: "Jada asked Gemini (Google) on 10 Oct. 2026 to “summarize the plot of Macbeth” and quoted one sentence in her English paper.", facts: ["Prompt: summarize the plot of Macbeth", "Date: 10 Oct. 2026", "Tool: Gemini (Google), gemini.google.com"],
+      slots: [
+        { l: "Title of source", o: ["Gemini.", "“Summarize the plot of Macbeth” prompt.", "Shakespeare, William."], c: 1, w: "Describe the prompt in the title slot. Don’t list the AI or Shakespeare as author of this content." },
+        { l: "Container", o: ["<i>Gemini</i>,", "<i>Macbeth</i>,", "<i>Google Search</i>,"], c: 0, w: "The tool is the container." },
+        { l: "Publisher", o: ["Jada,", "Google,", "Gemini,"], c: 1, w: "Google publishes Gemini." },
+        { l: "Date", o: ["10 Oct. 2026,", "1606,", "2026,"], c: 0, w: "The date the response was generated." },
+        { l: "Location", o: ["gemini.google.com.", "Act 1.", "Folger Library."], c: 0, w: "Give the tool’s URL." },
+      ], fmt: (v) => `${v[0]} ${v[1]} ${v[2]} ${v[3]} ${v[4]}` },
+    { kind: "MLA", tool: "Claude", scen: "Omar asked Claude (Anthropic) on 22 Sept. 2026 to “explain how vaccines train the immune system” and paraphrased it in a biology reflection.", facts: ["Prompt: explain how vaccines train the immune system", "Date: 22 Sept. 2026", "Tool: Claude (Anthropic), claude.ai"],
+      slots: [
+        { l: "Title of source", o: ["“Explain how vaccines train the immune system” prompt.", "Anthropic.", "Immune system."], c: 0, w: "A description of the prompt goes in the title slot." },
+        { l: "Container", o: ["<i>Biology Today</i>,", "<i>Claude</i>,", "<i>Anthropic</i>,"], c: 1, w: "The tool, Claude, is the container." },
+        { l: "Publisher", o: ["Anthropic,", "Claude,", "Omar,"], c: 0, w: "Anthropic is the publisher." },
+        { l: "Date", o: ["2026,", "22 Sept. 2026,", "n.d.,"], c: 1, w: "Use the full generation date." },
+        { l: "Location", o: ["claude.ai.", "my notes.", "anthropic.com/news."], c: 0, w: "Give the tool’s URL." },
+      ], fmt: (v) => `${v[0]} ${v[1]} ${v[2]} ${v[3]} ${v[4]}` },
+    { kind: "Statement", tool: "Perplexity", scen: "Kim used Perplexity on Nov. 2–4, 2026 to find search terms for a paper on sleep and grades. Kim found and read all sources in the college library database and wrote the paper alone.", facts: ["Tool: Perplexity", "Used for: search terms", "Kim: found and read sources, wrote everything"],
+      slots: [
+        { l: "Tool and dates", o: ["I used Perplexity on November 2–4, 2026", "I used some AI", "I used the internet"], c: 0, w: "Name the specific tool and when you used it." },
+        { l: "What AI did", o: ["to help with my paper.", "to suggest search terms for my topic.", "to write my sources section."], c: 1, w: "Name the exact task. “Help” is too vague, and Kim didn’t use AI for sources." },
+        { l: "What I did", o: ["I found and read every source in the library database and wrote the entire paper myself.", "AI and I wrote it together.", "I checked some things."], c: 0, w: "Say what you did yourself, specifically." },
+        { l: "Verification", o: ["I trusted the AI’s answers.", "I verified all sources and facts myself.", "Verification wasn’t needed."], c: 1, w: "State that you checked sources and facts yourself (and do it)." },
+      ], fmt: (v) => `${v[0]} ${v[1]} ${v[2]} ${v[3]}` },
+    { kind: "Statement", tool: "Claude", scen: "Dev wrote a business memo, then asked Claude on Oct. 15, 2026 to point out unclear sentences. Dev made every revision personally.", facts: ["Tool: Claude", "Used for: feedback on clarity", "Dev: wrote and revised everything"],
+      slots: [
+        { l: "Tool and dates", o: ["I used a chatbot", "I used Claude on October 15, 2026", "No AI was used"], c: 1, w: "Be specific and honest about the tool and date." },
+        { l: "What AI did", o: ["to point out unclear sentences in my draft.", "to rewrite my memo.", "for everything."], c: 0, w: "Feedback on clarity is what Claude did here." },
+        { l: "What I did", o: ["I wrote the memo and made every revision myself.", "Claude made the changes.", "I approved the AI version."], c: 0, w: "Dev wrote and revised it." },
+        { l: "Verification", o: ["I verified all facts myself.", "The AI checked the facts.", "Not applicable, AI is always right."], c: 0, w: "You’re responsible for checking facts, not the AI." },
+      ], fmt: (v) => `${v[0]} ${v[1]} ${v[2]} ${v[3]}` },
+    { kind: "Statement", tool: "ChatGPT", scen: "Rosa used ChatGPT on Sept. 8, 2026 to quiz herself on a reading before writing a response paper. She wrote the paper without AI.", facts: ["Tool: ChatGPT", "Used for: self-quiz on a reading", "Rosa: wrote the paper without AI"],
+      slots: [
+        { l: "Tool and dates", o: ["I used ChatGPT on September 8, 2026", "I used OpenAI products", "I may have used AI"], c: 0, w: "Name the tool and date." },
+        { l: "What AI did", o: ["to write my response.", "to quiz me on the assigned reading before I wrote.", "to summarize the reading for my paper."], c: 1, w: "Rosa used it as a study partner, not as a writer or summarizer." },
+        { l: "What I did", o: ["I wrote the response paper without using AI.", "I edited the AI response.", "I used its summary."], c: 0, w: "Say clearly what you did yourself." },
+        { l: "Verification", o: ["I checked my answers against the reading itself.", "ChatGPT confirmed my answers.", "I didn’t need to check."], c: 0, w: "Check against the real reading, not the chatbot." },
+      ], fmt: (v) => `${v[0]} ${v[1]} ${v[2]} ${v[3]}` },
+  ];
+  const TIPS = { APA: "APA tool references follow Company. (Year). Tool [Large language model]. URL. Prompts go in your text or an appendix.", MLA: "In MLA, the prompt description is the title, the tool is the container, the company is the publisher, then the date and URL. No author.", Statement: "A strong AI use statement names the tool and dates, the exact task, what you did yourself, and that you verified sources and facts." };
+  const PER_KIND = 2;
+  const $ = (id) => document.getElementById(id);
+  const stage = $("stage"), live = $("live");
+  const BEST_KEY = "disclosureBuilderBest";
+  const readBest = () => { try { return parseInt(localStorage.getItem(BEST_KEY) || "0", 10) || 0; } catch (e) { return 0; } };
+  const writeBest = (v) => { try { localStorage.setItem(BEST_KEY, String(v)); } catch (e) {} };
+  const shuffle = (a) => { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+  const strip = (s) => s.replace(/<[^>]+>/g, "");
+  let rounds, idx, score, possible, log, checked, orders;
+
+  function start(focus) {
+    const kinds = ["APA", "MLA", "Statement"];
+    rounds = shuffle(kinds.flatMap((k) => shuffle(BANK.filter((b) => b.kind === k)).slice(0, PER_KIND)));
+    idx = 0; score = 0; log = [];
+    possible = rounds.reduce((a, r) => a + r.slots.length, 0);
+    const b = readBest(); $("best").textContent = b ? `Your best on this device: ${b} of ${possible} slots.` : "";
+    render(focus);
+  }
+  function render(focus) {
+    checked = false;
+    const r = rounds[idx];
+    orders = r.slots.map((s) => shuffle(s.o.map((_, i) => i)));
+    stage.innerHTML = `<div class="hole" aria-hidden="true"></div>
+      <div class="meta"><span>Card ${idx + 1} of ${rounds.length}</span><span>Type: ${r.kind === "Statement" ? "AI use statement" : r.kind + " citation"}</span><span>Score: ${score}</span></div>
+      <h2 id="qh" tabindex="-1">${r.kind === "Statement" ? "Build the AI use statement" : "Build the " + r.kind + " entry for " + r.tool}</h2>
+      <div class="slip"><strong>The situation:</strong> ${r.scen}<ul>${r.facts.map((f) => `<li>${f}</li>`).join("")}</ul></div>
+      <form id="f"><div class="slots">${r.slots.map((s, si) => `<div class="slot"><label for="s${si}">${s.l}</label><div><select id="s${si}"><option value="">Choose…</option>${orders[si].map((oi) => `<option value="${oi}">${strip(s.o[oi])}</option>`).join("")}</select><span id="m${si}" class="mark"></span></div></div>`).join("")}</div>
+      <p class="small" style="margin:16px 0 0">Preview of what you’ve built:</p>
+      <div class="preview" id="pv" style="margin-top:6px"></div>
+      <div class="btns"><button type="submit" id="chk" disabled>Check my entry</button></div></form>
+      <div id="fb"></div>`;
+    const upd = () => {
+      const v = r.slots.map((s, si) => { const x = $("s" + si).value; return x === "" ? `<span class="gap">[${s.l}]</span>` : s.o[+x]; });
+      $("pv").innerHTML = r.fmt(v);
+      $("chk").disabled = checked || r.slots.some((_, si) => $("s" + si).value === "");
+    };
+    $("f").addEventListener("change", upd);
+    $("f").addEventListener("submit", (e) => { e.preventDefault(); check(); });
+    upd();
+    if (focus) $("qh").focus();
+  }
+  function check() {
+    if (checked) return; checked = true;
+    const r = rounds[idx]; let got = 0; const misses = [];
+    r.slots.forEach((s, si) => {
+      const sel = $("s" + si), ok = +sel.value === s.c; sel.disabled = true;
+      $("m" + si).textContent = ok ? "✓ Correct" : "✗ Fix";
+      $("m" + si).className = "mark " + (ok ? "ok" : "no");
+      if (ok) got++; else misses.push(`<li><strong>${s.l}:</strong> should be “${strip(s.o[s.c])}.” ${s.w}</li>`);
+    });
+    score += got; log.push({ kind: r.kind, got, max: r.slots.length });
+    $("chk").disabled = true;
+    const all = got === r.slots.length, last = idx === rounds.length - 1;
+    const correct = r.fmt(r.slots.map((s) => s.o[s.c]));
+    $("fb").innerHTML = `<div class="feedback ${all ? "good" : "bad"}"><h3 id="fbh" tabindex="-1">${all ? "✓ All slots correct" : `✗ ${got} of ${r.slots.length} slots correct`}</h3>
+      ${misses.length ? `<ul>${misses.join("")}</ul>` : `<p style="margin:0">${r.slots[0].w}</p>`}
+      <p style="margin:10px 0 0"><strong>Correct version:</strong></p><div class="preview" style="margin-top:6px">${correct}</div>
+      <div class="btns"><button type="button" id="next">${last ? "See your results" : "Next card"}</button></div></div>`;
+    live.textContent = `${got} of ${r.slots.length} slots correct.` + (misses.length ? " " + misses.map(strip).join(" ") : "");
+    $("fbh").focus();
+    $("next").addEventListener("click", () => { idx++; if (idx >= rounds.length) results(); else render(true); });
+  }
+  function results() {
+    const kinds = ["APA", "MLA", "Statement"];
+    const rows = kinds.map((k) => { const L = log.filter((x) => x.kind === k); const g = L.reduce((a, x) => a + x.got, 0), m = L.reduce((a, x) => a + x.max, 0); return { k, g, m, p: m ? g / m : 1 }; });
+    const weak = rows.slice().sort((a, b) => a.p - b.p)[0];
+    const prev = readBest(), best = Math.max(prev, score); if (score > prev) writeBest(score);
+    stage.innerHTML = `<div class="hole" aria-hidden="true"></div><h2 id="rh" tabindex="-1">Catalog complete</h2>
+      <p class="big">${score} / ${possible} slots</p>
+      <div class="tablewrap" tabindex="0" role="region" aria-label="Results by card type"><table><caption>Results by card type</caption>
+      <thead><tr><th scope="col">Card type</th><th scope="col">Correct slots</th><th scope="col">Possible</th></tr></thead>
+      <tbody>${rows.map((r) => `<tr><th scope="row">${r.k === "Statement" ? "AI use statement" : r.k}</th><td>${r.g}</td><td>${r.m}</td></tr>`).join("")}</tbody></table></div>
+      <p style="margin-top:14px"><strong>${weak.p === 1 ? "Perfect run." : "Work on: " + (weak.k === "Statement" ? "AI use statements" : weak.k + " citations") + "."}</strong> ${weak.p === 1 ? "Play again for new cards." : TIPS[weak.k]}</p>
+      <p class="small">Best on this device: ${best} of ${possible}.</p>
+      <div class="btns"><button type="button" id="again">Play again with new cards</button></div>`;
+    $("best").textContent = "";
+    live.textContent = `Finished. ${score} of ${possible}. Weakest: ${weak.k}.`;
+    $("rh").focus();
+    $("again").addEventListener("click", () => start(true));
+  }
+  start(false);
+})();
+</script>
